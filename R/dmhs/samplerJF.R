@@ -7,13 +7,13 @@ library(doParallel)
 library(doRNG)
 
 #options(mc.cores = parallel::detectCores())
-registerDoParallel(cores = 50)
+registerDoParallel(cores = 10)
 rstan_options(auto_write = TRUE)
 
 
 source("R/gen_nl.R")
 #1a
-simdata <- genmech_het_nl(npred = 25, nset = 50, overlap = 1.0)
+simdata <- genmech_het_nl(npred = 25, nset = 50, overlap = .8)
 ##1b
 #simdata <- genmech_het_nl(npred = 50, nset = 50, overlap = 1.0)
 ##3a
@@ -57,13 +57,13 @@ J <- dim(Yl[[1]])[2]
 p <- dim(Xl[[1]])[2]
 q <- dim(Zl[[1]])[2]
 
-K <- 50#repliche
+K <- 10#repliche
 npat_pred <- 28
 
 Y <- array(0, dim = c(n + npat_pred, J, R))
 X <- array(0, dim = c(n + npat_pred, p, R))
 Z <- array(0, dim = c(n + npat_pred, q, R))
-Xdis <- array(0, dim = c(n + npat_pred, (p + p + q + 2), R))
+Xdis <- array(0, dim = c(n + npat_pred, (p + p + q + 1), R))
 trt <- matrix(0, n + npat_pred, R)
 
 
@@ -77,7 +77,7 @@ for(r in 1:R){
   trt[1:124,r] <- trtl[[r]][1:124]-1
   trt[125:152,r] <- 0
   trt[153:180,r] <- 1
-  Xdis[,,r] <- cbind(rep(1, n + npat_pred), X[,,r], Z[,,r], trt[,r], (trt[,r]*X[,,r]))
+  Xdis[,,r] <- cbind(X[,,r], Z[,,r], trt[,r], (trt[,r]*X[,,r]))
 }
 
 #params1 <- params2 <- array(npat_pred, J, K)
@@ -102,8 +102,8 @@ res <- foreach(k = 1:K) %dorng%
                     P = dim(X_train)[2], X = X_train, Xp = X_test, Y = Y_train,
                     sd_prior = 1.0, psi = .25)
 
-    fit <- rstan::stan(file = "R/dmhs-scripts/model.stan", data = ss_data, cores = 1, iter = 1500,
-                        chains = 1, verbose = T, warmup = 500, seed = 121,
+    fit <- rstan::stan(file = "R/dmhs/model.stan", data = ss_data, cores = 1, iter = 500,
+                        chains = 1, verbose = T, warmup = 100, seed = 121,
                         control = list(max_treedepth = 15, adapt_delta = 0.995))#995))
 
 
@@ -167,4 +167,5 @@ NPC <- c(round(mean(PPMXCUT), 4), round(sd(PPMXCUT), 4))
 #results
 resDMHS <- rbind(MOT, MTUg, NPC)#, WAIC, lpml)
 colnames(resDMHS) <- c("mean", "sd")
-save(resDMHS, file="output/simulation-study/main/scen3b_dmhs_res.RData")
+#save(resDMHS, file="output/simulation-study/main/scen3b_dmhs_res.RData")
+resDMHS

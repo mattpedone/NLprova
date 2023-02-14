@@ -51,9 +51,8 @@ tt <- function(pred, prog){
   #metx <- sign(metx1)*(sign(metx1)*metx1)^(0.2) * 0.45
   x1 <- scale(mypca$x[,1])
   x2 <- scale(mypca$x[,2])
-  metx <- sin(2*pi*x1) + cos(2*pi*x2)
-  ## for the noisy scenario
-  
+  metx <- cos(x1) + cos(x2)
+  #rgl::plot3d(x1, x2, metx, col = "blue", size = 3)
   # Prognostic Markers
   ## transformation
   z2 <- prog[,1]
@@ -64,7 +63,7 @@ tt <- function(pred, prog){
   # pmts probabilities for treatment 1
   alpha1 <- c(-0.5, -1)
   #beta11 <- c(2, 2.6)
-  beta11 <- 2.3
+  beta11 <- 1
   # pmts probabilities for treatment 2
   alpha2 <- c(0.7, -1)
   #beta21 <- c(-1, -3)
