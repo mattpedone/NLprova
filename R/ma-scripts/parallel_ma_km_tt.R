@@ -8,15 +8,9 @@ library(parallel)
 library(doParallel)
 library(doRNG)
 
-loadRData <- function(fileName){
-  #loads an RData file, and returns it
-  load(fileName)
-  get(ls()[ls() != "fileName"])
-}
-#for(sc in 10:12){
-#sc <- 2
-#simdata <- loadRData(paste0("data/scen3b.RData"))
-#mypath <- c("output/simulation-study/main/scen3b_hc")
+source("R/gen_nl.R")
+#1a
+simdata <- genmech_het_nl(npred = 25, nset = 50, overlap = 1.0)
 ################################ Functions ########################################
 mymultt <- function(Xtrain, X.pred){
   myln <- length(Xtrain[,1])

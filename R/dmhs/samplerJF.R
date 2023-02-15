@@ -7,13 +7,13 @@ library(doParallel)
 library(doRNG)
 
 #options(mc.cores = parallel::detectCores())
-registerDoParallel(cores = 10)
+registerDoParallel(cores = 50)
 rstan_options(auto_write = TRUE)
 
 
 source("R/gen_nl.R")
 #1a
-simdata <- genmech_het_nl(npred = 25, nset = 50, overlap = .8)
+simdata <- genmech_het_nl(npred = 25, nset = 50, overlap = 1.0)
 ##1b
 #simdata <- genmech_het_nl(npred = 50, nset = 50, overlap = 1.0)
 ##3a
@@ -35,7 +35,7 @@ npc2 <- function(output, trtsgn, myoutot){
     for (j in 1:n) {
       mypre[j] <- mypreTall[j, trtsgn[j]]
     }
-    sts <- table(mypre, myoutot)
+    sts <- table(factor(mypre, levels = 1:3), factor(myoutot, levels = 1:3))
     mysdls <- as.numeric(rownames(sts))
     str1 <- matrix(0, nrow = 3, ncol = 3)
     str1[mysdls, ] <- sts
@@ -102,12 +102,12 @@ res <- foreach(k = 1:K) %dorng%
                     P = dim(X_train)[2], X = X_train, Xp = X_test, Y = Y_train,
                     sd_prior = 1.0, psi = .25)
 
-    fit <- rstan::stan(file = "R/dmhs/model.stan", data = ss_data, cores = 1, iter = 500,
-                        chains = 1, verbose = T, warmup = 100, seed = 121,
+    fit <- rstan::stan(file = "R/dmhs/model.stan", data = ss_data, cores = 1, iter = 1000,
+                        chains = 1, verbose = T, warmup = 200, seed = 121,
                         control = list(max_treedepth = 15, adapt_delta = 0.995))#995))
 
 
-    #check_hmc_diagnostics(fit1)
+    #check_hmc_diagnostics(fit)
     params <- rstan::extract(fit)
     pp <- apply(params$pipred, c(2,3), median)
 
@@ -166,6 +166,7 @@ NPC <- c(round(mean(PPMXCUT), 4), round(sd(PPMXCUT), 4))
 
 #results
 resDMHS <- rbind(MOT, MTUg, NPC)#, WAIC, lpml)
+#resDMHS <- rbind(MOT, MTUg)#, WAIC, lpml)
 colnames(resDMHS) <- c("mean", "sd")
 #save(resDMHS, file="output/simulation-study/main/scen3b_dmhs_res.RData")
 resDMHS

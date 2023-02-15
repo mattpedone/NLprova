@@ -18,32 +18,7 @@ simdata <- genmech_het_nl(npred = 25, nset = 50, overlap = 1.0)
 ##3b
 #simdata <- genmech_het_nl(npred = 50, nset = 50, overlap = .8)
 
-npc2 <- function(output, trtsgn, myoutot){
-  K <- dim(output)[3]
-  n <- dim(output)[1]
-  myctut <- array(0, dim = c(3, 3, K))
-  myctutSum <- NULL
-  for (i in 1:K) {
-    mycurdata <- output[, , i]
-    mypre <- NULL
-    pretrt1 <- apply(mycurdata[, 1:3], 1, which.max)
-    pretrt2 <- apply(mycurdata[, 4:6], 1, which.max)
-    mypreTall <- cbind(pretrt1, pretrt2)
-    for (j in 1:n) {
-      mypre[j] <- mypreTall[j, trtsgn[j]]
-    }
-    sts <- table(mypre, myoutot)
-    mysdls <- as.numeric(rownames(sts))
-    str1 <- matrix(0, nrow = 3, ncol = 3)
-    str1[mysdls, ] <- sts
-    myctut[, , i] <- str1 * diag(3)
-    myctutSum[i] <- sum(str1 * diag(3))
-  }
-  res <- cbind(myctutSum)
-  return(res)
-}
-
-K <- 10#repliche
+K <- 10 #repliche
 npat_pred <- 28
 
 predAPT_all <- array(0, dim = c(npat_pred, 9, K))
@@ -153,6 +128,31 @@ for(k in 1:K){
 
 MTUg <- c(round(mean(PPMXpp/utsum), 4), round(sd(PPMXpp/utsum), 4))
 
+npc2 <- function(output, trtsgn, myoutot){
+  K <- dim(output)[3]
+  n <- dim(output)[1]
+  myctut <- array(0, dim = c(3, 3, K))
+  myctutSum <- NULL
+  for (i in 1:K) {
+    mycurdata <- output[, , i]
+    mypre <- NULL
+    pretrt1 <- apply(mycurdata[, 1:3], 1, which.max)
+    pretrt2 <- apply(mycurdata[, 4:6], 1, which.max)
+    mypreTall <- cbind(pretrt1, pretrt2)
+    for (j in 1:n) {
+      mypre[j] <- mypreTall[j, trtsgn[j]]
+    }
+    sts <- table(factor(mypre, levels = 1:3), factor(myoutot, levels = 1:3))
+    mysdls <- as.numeric(rownames(sts))
+    str1 <- matrix(0, nrow = 3, ncol = 3)
+    str1[mysdls, ] <- sts
+    myctut[, , i] <- str1 * diag(3)
+    myctutSum[i] <- sum(str1 * diag(3))
+  }
+  res <- cbind(myctutSum)
+  return(res)
+}
+
 #NPC
 PPMXCUT <- c()
 for(k in 1:K){
@@ -175,6 +175,7 @@ lpml <- c(mean(gof_all[,2]), sd(gof_all[,2]))
 
 #results
 resPPMX <- rbind(MOT, MTUg, NPC, WAIC, lpml)
+#resPPMX <- rbind(MOT, MTUg, WAIC, lpml)
 colnames(resPPMX) <- c("mean", "sd")
 resPPMX
 
